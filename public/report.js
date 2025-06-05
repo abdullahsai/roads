@@ -1,9 +1,13 @@
-async function loadItems() {
-    const res = await fetch('/api/items/all');
+
+async function loadItems(category) {
+    const url = category ? `/api/items/all?category=${encodeURIComponent(category)}` : '/api/items/all';
+    const res = await fetch(url);
+
     const items = await res.json();
     const container = document.getElementById('itemsList');
     container.innerHTML = '';
     items.forEach(item => {
+
 
         const row = document.createElement('div');
         row.className = 'row g-2 align-items-center mb-2';
@@ -17,6 +21,26 @@ async function loadItems() {
         container.appendChild(row);
 
     });
+}
+
+async function loadCategories() {
+    const res = await fetch('/api/items/categories');
+    const categories = await res.json();
+    const select = document.getElementById('categorySelect');
+    select.innerHTML = '';
+    categories.forEach((cat, idx) => {
+        const opt = document.createElement('option');
+        opt.value = cat;
+        opt.textContent = cat;
+        select.appendChild(opt);
+        if (idx === 0) select.value = cat;
+    });
+    if (categories.length > 0) {
+        loadItems(select.value);
+    } else {
+        document.getElementById('itemsList').innerHTML = '<p>No items found.</p>';
+    }
+
 }
 
 async function loadReport() {
@@ -68,7 +92,12 @@ async function handleSubmit(e) {
 }
 
 window.addEventListener('DOMContentLoaded', () => {
-    loadItems();
+
+    loadCategories();
     loadReport();
+    document.getElementById('categorySelect').addEventListener('change', (e) => {
+        loadItems(e.target.value);
+    });
+
     document.getElementById('reportForm').addEventListener('submit', handleSubmit);
 });

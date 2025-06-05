@@ -72,9 +72,29 @@ app.post('/api/items', (req, res) => {
 });
 
 
-// Endpoint to get all items (for report page)
+// Endpoint to list distinct item categories
+app.get('/api/items/categories', (req, res) => {
+  db.all('SELECT DISTINCT category FROM items ORDER BY category', [], (err, rows) => {
+    if (err) {
+      console.error(err);
+      return res.status(500).json({ error: 'Failed to retrieve categories' });
+    }
+    res.json(rows.map(r => r.category));
+  });
+});
+
+// Endpoint to get all items for report page (optionally filtered by category)
 app.get('/api/items/all', (req, res) => {
-  db.all('SELECT * FROM items ORDER BY description', [], (err, rows) => {
+  const { category } = req.query;
+  const params = [];
+  let query = 'SELECT * FROM items';
+  if (category) {
+    query += ' WHERE category = ?';
+    params.push(category);
+  }
+  query += ' ORDER BY description';
+  db.all(query, params, (err, rows) => {
+
     if (err) {
       console.error(err);
       return res.status(500).json({ error: 'Failed to retrieve items' });
