@@ -10,10 +10,12 @@ app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(express.static(path.join(__dirname, 'public')));
 
+
 // Serve report page
 app.get('/report', (req, res) => {
   res.sendFile(path.join(__dirname, 'public', 'report.html'));
 });
+
 
 // Initialize SQLite database
 const db = new sqlite3.Database('./data.db', (err) => {
@@ -30,6 +32,7 @@ const db = new sqlite3.Database('./data.db', (err) => {
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
       )`
     );
+
     db.run(
       `CREATE TABLE IF NOT EXISTS reports (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -46,6 +49,7 @@ const db = new sqlite3.Database('./data.db', (err) => {
         FOREIGN KEY(item_id) REFERENCES items(id)
       )`
     );
+
   }
 });
 
@@ -67,6 +71,7 @@ app.post('/api/items', (req, res) => {
   });
 });
 
+
 // Endpoint to get all items (for report page)
 app.get('/api/items/all', (req, res) => {
   db.all('SELECT * FROM items ORDER BY description', [], (err, rows) => {
@@ -78,6 +83,7 @@ app.get('/api/items/all', (req, res) => {
   });
 });
 
+
 // Endpoint to get last 5 items
 app.get('/api/items', (req, res) => {
   db.all('SELECT * FROM items ORDER BY created_at DESC LIMIT 5', [], (err, rows) => {
@@ -88,6 +94,7 @@ app.get('/api/items', (req, res) => {
     res.json(rows);
   });
 });
+
 
 // Endpoint to add damage report entries
 app.post('/api/report', (req, res) => {
@@ -130,6 +137,7 @@ app.get('/api/report', (req, res) => {
                   GROUP BY r.id
                   ORDER BY r.created_at DESC
                   LIMIT 5`;
+
   db.all(query, [], (err, rows) => {
     if (err) {
       console.error(err);
@@ -138,6 +146,7 @@ app.get('/api/report', (req, res) => {
     res.json(rows);
   });
 });
+
 
 app.listen(PORT, () => {
   console.log(`Server listening on port ${PORT}`);

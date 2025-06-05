@@ -4,6 +4,7 @@ async function loadItems() {
     const container = document.getElementById('itemsList');
     container.innerHTML = '';
     items.forEach(item => {
+
         const row = document.createElement('div');
         row.className = 'row g-2 align-items-center mb-2';
         row.innerHTML = `
@@ -14,11 +15,13 @@ async function loadItems() {
                 <input type="number" min="0" step="1" data-id="${item.id}" class="form-control" placeholder="Qty">
             </div>`;
         container.appendChild(row);
+
     });
 }
 
 async function loadReport() {
     const res = await fetch('/api/report');
+
     const reports = await res.json();
     const tbody = document.querySelector('#reportTable tbody');
     tbody.innerHTML = '';
@@ -28,6 +31,7 @@ async function loadReport() {
             <td>${rep.id}</td>
             <td>${rep.total.toFixed(2)}</td>
             <td>${new Date(rep.created_at).toLocaleString()}</td>
+
         `;
         tbody.appendChild(tr);
     });
@@ -35,6 +39,7 @@ async function loadReport() {
 
 async function handleSubmit(e) {
     e.preventDefault();
+
     const entries = [];
     document.querySelectorAll('#itemsList input[type="number"]').forEach(el => {
         const qty = parseFloat(el.value);
@@ -44,12 +49,15 @@ async function handleSubmit(e) {
     });
     if (entries.length === 0) {
         alert('Enter a quantity for at least one item');
+
         return;
     }
     const res = await fetch('/api/report', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
+
         body: JSON.stringify({ items: entries })
+
     });
     if (res.ok) {
         document.getElementById('reportForm').reset();
