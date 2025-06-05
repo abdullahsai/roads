@@ -7,7 +7,8 @@ This is a simple Node.js/Express web application with an SQLite database for man
 - **Unit of measurement**
 - **Cost per unit**
 
-The main page allows you to add items and shows the last five entries.
+The main page allows you to add items and shows the last five entries. A second page at `/report` lets you select items and save damage reports.
+
 
 ## Development
 
@@ -15,6 +16,9 @@ The main page allows you to add items and shows the last five entries.
    ```bash
    npm install
    ```
+   
+   Node.js 18 or newer is recommended.
+
 2. Start the development server:
    ```bash
    npm start
