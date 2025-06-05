@@ -9,13 +9,16 @@ This is a simple Node.js/Express web application with an SQLite database for man
 
 The main page allows you to add items and shows the last five entries. A second page at `/report` lets you select items and save damage reports.
 
+
 ## Development
 
 1. Install dependencies:
    ```bash
    npm install
    ```
+
    Node.js 18 or newer is recommended.
+
 2. Start the development server:
    ```bash
    npm start
