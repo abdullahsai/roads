@@ -34,10 +34,18 @@ const db = new sqlite3.Database('./data.db', (err) => {
     );
 
     db.run(
-      `CREATE TABLE IF NOT EXISTS damage_reports (
+      `CREATE TABLE IF NOT EXISTS reports (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+      )`
+    );
+    db.run(
+      `CREATE TABLE IF NOT EXISTS report_items (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        report_id INTEGER NOT NULL,
         item_id INTEGER NOT NULL,
-        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        quantity REAL NOT NULL,
+        FOREIGN KEY(report_id) REFERENCES reports(id),
         FOREIGN KEY(item_id) REFERENCES items(id)
       )`
     );
@@ -90,30 +98,46 @@ app.get('/api/items', (req, res) => {
 
 // Endpoint to add damage report entries
 app.post('/api/report', (req, res) => {
-  const { itemIds } = req.body;
-  if (!Array.isArray(itemIds) || itemIds.length === 0) {
-    return res.status(400).json({ error: 'itemIds must be a non-empty array' });
+  const { items } = req.body; // [{ itemId, quantity }]
+  if (!Array.isArray(items) || items.length === 0) {
+    return res.status(400).json({ error: 'items must be a non-empty array' });
   }
-  const stmt = db.prepare('INSERT INTO damage_reports (item_id) VALUES (?)');
-  for (const id of itemIds) {
-    stmt.run(id);
-  }
-  stmt.finalize((err) => {
+
+  db.run('INSERT INTO reports DEFAULT VALUES', function (err) {
     if (err) {
       console.error(err);
-      return res.status(500).json({ error: 'Failed to save report' });
+      return res.status(500).json({ error: 'Failed to create report' });
     }
-    res.json({ success: true });
+    const reportId = this.lastID;
+    const stmt = db.prepare(
+      'INSERT INTO report_items (report_id, item_id, quantity) VALUES (?, ?, ?)'
+    );
+    for (const entry of items) {
+      const { itemId, quantity } = entry;
+      if (!itemId || !quantity || isNaN(quantity) || quantity <= 0) continue;
+      stmt.run(reportId, itemId, quantity);
+    }
+    stmt.finalize((err2) => {
+      if (err2) {
+        console.error(err2);
+        return res.status(500).json({ error: 'Failed to save report items' });
+      }
+      res.json({ reportId });
+    });
   });
 });
 
-// Endpoint to get last 5 reported items with details
+// Endpoint to get last 5 reports with totals
 app.get('/api/report', (req, res) => {
-  const query = `SELECT dr.id, i.category, i.description, i.unit, i.cost, dr.created_at
-                 FROM damage_reports dr
-                 JOIN items i ON dr.item_id = i.id
-                 ORDER BY dr.created_at DESC
-                 LIMIT 5`;
+  const query = `SELECT r.id, r.created_at,
+                        SUM(ri.quantity * i.cost) AS total
+                   FROM reports r
+                   JOIN report_items ri ON ri.report_id = r.id
+                   JOIN items i ON ri.item_id = i.id
+                  GROUP BY r.id
+                  ORDER BY r.created_at DESC
+                  LIMIT 5`;
+
   db.all(query, [], (err, rows) => {
     if (err) {
       console.error(err);

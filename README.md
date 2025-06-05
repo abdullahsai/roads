@@ -7,7 +7,8 @@ This is a simple Node.js/Express web application with an SQLite database for man
 - **Unit of measurement**
 - **Cost per unit**
 
-The main page allows you to add items and shows the last five entries. A second page at `/report` lets you select items and save damage reports.
+
+The main page allows you to add items and shows the last five entries. A second page at `/report` lets you build damage reports by selecting items with quantities. Each saved report shows the total cost of its items.
 
 
 ## Development

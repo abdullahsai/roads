@@ -4,26 +4,34 @@ async function loadItems() {
     const container = document.getElementById('itemsList');
     container.innerHTML = '';
     items.forEach(item => {
-        const div = document.createElement('div');
-        div.className = 'form-check';
-        div.innerHTML = `<input class="form-check-input" type="checkbox" value="${item.id}" id="item${item.id}">\n<label class="form-check-label" for="item${item.id}">${item.description}</label>`;
-        container.appendChild(div);
+
+        const row = document.createElement('div');
+        row.className = 'row g-2 align-items-center mb-2';
+        row.innerHTML = `
+            <div class="col-sm-6 col-md-4">
+                <label class="form-label">${item.description} ($${item.cost}/${item.unit})</label>
+            </div>
+            <div class="col-sm-3 col-md-2">
+                <input type="number" min="0" step="1" data-id="${item.id}" class="form-control" placeholder="Qty">
+            </div>`;
+        container.appendChild(row);
+
     });
 }
 
 async function loadReport() {
     const res = await fetch('/api/report');
-    const items = await res.json();
+
+    const reports = await res.json();
     const tbody = document.querySelector('#reportTable tbody');
     tbody.innerHTML = '';
-    items.forEach(item => {
+    reports.forEach(rep => {
         const tr = document.createElement('tr');
         tr.innerHTML = `
-            <td>${item.category}</td>
-            <td>${item.description}</td>
-            <td>${item.unit}</td>
-            <td>${item.cost}</td>
-            <td>${new Date(item.created_at).toLocaleString()}</td>
+            <td>${rep.id}</td>
+            <td>${rep.total.toFixed(2)}</td>
+            <td>${new Date(rep.created_at).toLocaleString()}</td>
+
         `;
         tbody.appendChild(tr);
     });
@@ -31,15 +39,25 @@ async function loadReport() {
 
 async function handleSubmit(e) {
     e.preventDefault();
-    const selected = Array.from(document.querySelectorAll('#itemsList input:checked')).map(el => parseInt(el.value));
-    if (selected.length === 0) {
-        alert('Select at least one item');
+
+    const entries = [];
+    document.querySelectorAll('#itemsList input[type="number"]').forEach(el => {
+        const qty = parseFloat(el.value);
+        if (qty && qty > 0) {
+            entries.push({ itemId: parseInt(el.dataset.id), quantity: qty });
+        }
+    });
+    if (entries.length === 0) {
+        alert('Enter a quantity for at least one item');
+
         return;
     }
     const res = await fetch('/api/report', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ itemIds: selected })
+
+        body: JSON.stringify({ items: entries })
+
     });
     if (res.ok) {
         document.getElementById('reportForm').reset();
