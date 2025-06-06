@@ -1,10 +1,13 @@
+
 async function loadItems(category) {
     const url = category ? `/api/items/all?category=${encodeURIComponent(category)}` : '/api/items/all';
     const res = await fetch(url);
+
     const items = await res.json();
     const container = document.getElementById('itemsList');
     container.innerHTML = '';
     items.forEach(item => {
+
         const row = document.createElement('div');
         row.className = 'row g-2 align-items-center mb-2';
         row.innerHTML = `
@@ -15,6 +18,7 @@ async function loadItems(category) {
                 <input type="number" min="0" step="1" data-id="${item.id}" class="form-control" placeholder="Qty">
             </div>`;
         container.appendChild(row);
+
     });
 }
 
@@ -35,10 +39,12 @@ async function loadCategories() {
     } else {
         document.getElementById('itemsList').innerHTML = '<p>No items found.</p>';
     }
+
 }
 
 async function loadReport() {
     const res = await fetch('/api/report');
+
     const reports = await res.json();
     const tbody = document.querySelector('#reportTable tbody');
     tbody.innerHTML = '';
@@ -48,6 +54,7 @@ async function loadReport() {
             <td>${rep.id}</td>
             <td>${rep.total.toFixed(2)}</td>
             <td>${new Date(rep.created_at).toLocaleString()}</td>
+
             <td><button class="btn btn-sm btn-outline-primary" data-id="${rep.id}">Download PDF</button></td>
         `;
         tbody.appendChild(tr);
@@ -56,6 +63,7 @@ async function loadReport() {
         btn.addEventListener('click', () => downloadPdf(btn.dataset.id));
     });
 }
+
 
 const currentItems = [];
 
@@ -102,11 +110,13 @@ async function handleSubmit(e) {
         renderCurrentItems();
         document.getElementById('reportForm').reset();
         loadItems(document.getElementById('categorySelect').value);
+
         loadReport();
     } else {
         alert('Failed to save report');
     }
 }
+
 
 function discardReport() {
     currentItems.length = 0;
@@ -114,6 +124,7 @@ function discardReport() {
     document.getElementById('reportForm').reset();
     loadItems(document.getElementById('categorySelect').value);
 }
+
 
 async function downloadPdf(id) {
     const res = await fetch(`/api/report/${id}`);
@@ -146,12 +157,15 @@ async function downloadPdf(id) {
 }
 
 window.addEventListener('DOMContentLoaded', () => {
+
     loadCategories();
     loadReport();
     document.getElementById('categorySelect').addEventListener('change', (e) => {
         loadItems(e.target.value);
     });
+
     document.getElementById('reportForm').addEventListener('submit', handleSubmit);
     document.getElementById('addItemsBtn').addEventListener('click', addItems);
     document.getElementById('discardBtn').addEventListener('click', discardReport);
+
 });
