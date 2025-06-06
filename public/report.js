@@ -100,10 +100,24 @@ async function handleSubmit(e) {
         return;
     }
     const payload = currentItems.map(it => ({ itemId: it.itemId, quantity: it.quantity }));
+
+    const supervisor = document.getElementById('supervisor').value;
+    const police_report = document.getElementById('policeNumber').value;
+    const street = document.getElementById('street').value;
+    const state = document.getElementById('state').value;
+    const location = document.getElementById('location').value;
     const res = await fetch('/api/report', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ items: payload })
+        body: JSON.stringify({
+            supervisor,
+            police_report,
+            street,
+            state,
+            location,
+            items: payload
+        })
+
     });
     if (res.ok) {
         currentItems.length = 0;
@@ -132,9 +146,23 @@ async function downloadPdf(id) {
     const { jsPDF } = window.jspdf;
     const doc = new jsPDF();
     doc.setFontSize(16);
-    doc.text(`Damage Report #${id}`, 10, 15);
+
+    doc.text(`Damage Report #${id}`, 105, 15, { align: 'center' });
     doc.setFontSize(12);
     let y = 25;
+    doc.text(`Supervisor: ${data.supervisor || ''}`, 10, y);
+    y += 6;
+    doc.text(`Police Report #: ${data.police_report || ''}`, 10, y);
+    y += 6;
+    doc.text(`Street: ${data.street || ''}`, 10, y);
+    y += 6;
+    doc.text(`State: ${data.state || ''}`, 10, y);
+    y += 6;
+    doc.text(`Location: ${data.location || ''}`, 10, y);
+    y += 8;
+    doc.line(10, y, 200, y);
+    y += 6;
+
     doc.text('Description', 10, y);
     doc.text('Cost', 80, y);
     doc.text('Qty', 110, y);

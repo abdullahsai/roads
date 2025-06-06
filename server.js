@@ -36,6 +36,12 @@ const db = new sqlite3.Database('./data.db', (err) => {
     db.run(
       `CREATE TABLE IF NOT EXISTS reports (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
+        supervisor TEXT,
+        police_report TEXT,
+        street TEXT,
+        state TEXT,
+        location TEXT,
+
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
       )`
     );
@@ -118,12 +124,25 @@ app.get('/api/items', (req, res) => {
 
 // Endpoint to add damage report entries
 app.post('/api/report', (req, res) => {
-  const { items } = req.body; // [{ itemId, quantity }]
+  const {
+    supervisor,
+    police_report,
+    street,
+    state,
+    location,
+    items,
+  } = req.body; // [{ itemId, quantity }]
+
   if (!Array.isArray(items) || items.length === 0) {
     return res.status(400).json({ error: 'items must be a non-empty array' });
   }
 
-  db.run('INSERT INTO reports DEFAULT VALUES', function (err) {
+
+  db.run(
+    'INSERT INTO reports (supervisor, police_report, street, state, location) VALUES (?, ?, ?, ?, ?)',
+    [supervisor, police_report, street, state, location],
+    function (err) {
+
     if (err) {
       console.error(err);
       return res.status(500).json({ error: 'Failed to create report' });
@@ -171,18 +190,25 @@ app.get('/api/report', (req, res) => {
 // Endpoint to get detailed info for a single report
 app.get('/api/report/:id', (req, res) => {
   const { id } = req.params;
-  const query = `SELECT i.description, i.cost, i.unit, ri.quantity,
-                        (ri.quantity * i.cost) AS line_total
-                   FROM report_items ri
-                   JOIN items i ON ri.item_id = i.id
-                  WHERE ri.report_id = ?`;
-  db.all(query, [id], (err, rows) => {
-    if (err) {
+  const infoQuery = `SELECT supervisor, police_report, street, state, location, created_at FROM reports WHERE id = ?`;
+  const itemsQuery = `SELECT i.description, i.cost, i.unit, ri.quantity,
+                             (ri.quantity * i.cost) AS line_total
+                        FROM report_items ri
+                        JOIN items i ON ri.item_id = i.id
+                       WHERE ri.report_id = ?`;
+  db.get(infoQuery, [id], (err, info) => {
+    if (err || !info) {
       console.error(err);
-      return res.status(500).json({ error: 'Failed to retrieve report items' });
+      return res.status(500).json({ error: 'Failed to retrieve report info' });
     }
-    const total = rows.reduce((sum, r) => sum + r.line_total, 0);
-    res.json({ items: rows, total });
+    db.all(itemsQuery, [id], (err2, rows) => {
+      if (err2) {
+        console.error(err2);
+        return res.status(500).json({ error: 'Failed to retrieve report items' });
+      }
+      const total = rows.reduce((sum, r) => sum + r.line_total, 0);
+      res.json({ ...info, items: rows, total });
+    });
   });
 });
 

@@ -12,6 +12,24 @@
     <h1 class="mb-4 text-center">Damage Report</h1>
     <form id="reportForm" class="mb-4">
 
+        <div class="row g-3 mb-3">
+            <div class="col-md-4">
+                <input type="text" id="supervisor" class="form-control" placeholder="Supervisor Name">
+            </div>
+            <div class="col-md-4">
+                <input type="text" id="policeNumber" class="form-control" placeholder="Police Report #">
+            </div>
+            <div class="col-md-4">
+                <input type="text" id="street" class="form-control" placeholder="Street Name">
+            </div>
+            <div class="col-md-4">
+                <input type="text" id="state" class="form-control" placeholder="State">
+            </div>
+            <div class="col-md-8">
+                <input type="text" id="location" class="form-control" placeholder="Location Description">
+            </div>
+        </div>
+
         <select id="categorySelect" class="form-select mb-3"></select>
         <div id="itemsList" class="mb-3"></div>
         <button id="addItemsBtn" class="btn btn-secondary mb-3" type="button">Add Items</button>
