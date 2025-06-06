@@ -55,8 +55,12 @@ async function loadReport() {
             <td>${rep.total.toFixed(2)}</td>
             <td>${new Date(rep.created_at).toLocaleString()}</td>
 
+            <td><button class="btn btn-sm btn-outline-primary" data-id="${rep.id}">Download PDF</button></td>
         `;
         tbody.appendChild(tr);
+    });
+    tbody.querySelectorAll('button[data-id]').forEach(btn => {
+        btn.addEventListener('click', () => downloadPdf(btn.dataset.id));
     });
 }
 
@@ -119,6 +123,37 @@ function discardReport() {
     renderCurrentItems();
     document.getElementById('reportForm').reset();
     loadItems(document.getElementById('categorySelect').value);
+}
+
+
+async function downloadPdf(id) {
+    const res = await fetch(`/api/report/${id}`);
+    const data = await res.json();
+    const { jsPDF } = window.jspdf;
+    const doc = new jsPDF();
+    doc.setFontSize(16);
+    doc.text(`Damage Report #${id}`, 10, 15);
+    doc.setFontSize(12);
+    let y = 25;
+    doc.text('Description', 10, y);
+    doc.text('Cost', 80, y);
+    doc.text('Qty', 110, y);
+    doc.text('Total', 140, y);
+    y += 6;
+    data.items.forEach(it => {
+        doc.text(it.description, 10, y);
+        doc.text(it.cost.toFixed(2), 80, y);
+        doc.text(String(it.quantity), 110, y);
+        doc.text(it.line_total.toFixed(2), 140, y);
+        y += 6;
+        if (y > 270) {
+            doc.addPage();
+            y = 20;
+        }
+    });
+    y += 6;
+    doc.text(`Grand Total: $${data.total.toFixed(2)}`, 10, y);
+    doc.save(`report-${id}.pdf`);
 }
 
 window.addEventListener('DOMContentLoaded', () => {

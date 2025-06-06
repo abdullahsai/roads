@@ -168,6 +168,25 @@ app.get('/api/report', (req, res) => {
 });
 
 
+// Endpoint to get detailed info for a single report
+app.get('/api/report/:id', (req, res) => {
+  const { id } = req.params;
+  const query = `SELECT i.description, i.cost, i.unit, ri.quantity,
+                        (ri.quantity * i.cost) AS line_total
+                   FROM report_items ri
+                   JOIN items i ON ri.item_id = i.id
+                  WHERE ri.report_id = ?`;
+  db.all(query, [id], (err, rows) => {
+    if (err) {
+      console.error(err);
+      return res.status(500).json({ error: 'Failed to retrieve report items' });
+    }
+    const total = rows.reduce((sum, r) => sum + r.line_total, 0);
+    res.json({ items: rows, total });
+  });
+});
+
+
 app.listen(PORT, () => {
   console.log(`Server listening on port ${PORT}`);
 });
