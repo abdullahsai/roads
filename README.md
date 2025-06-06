@@ -7,7 +7,9 @@ This is a simple Node.js/Express web application with an SQLite database for man
 - **Unit of measurement**
 - **Cost per unit**
 
+
 The main page allows you to add items and shows the last five entries. A second page at `/report` lets you build damage reports. At the top of each report you can enter the supervisor name, police report number, street, state, and a short location description. Choose a category, enter quantities for items and press **Add Items** to build up your report. When finished, click **Save Report** to store it or **Discard Report** to clear the form. Each saved report shows the total cost of its items. Use the **Download PDF** button to export a nicely formatted report with your header information and an itemized table.
+
 
 ## Development
 
@@ -15,7 +17,9 @@ The main page allows you to add items and shows the last five entries. A second 
    ```bash
    npm install
    ```
+
    Node.js 18 or newer is recommended.
+
 2. Start the development server:
    ```bash
    npm start
