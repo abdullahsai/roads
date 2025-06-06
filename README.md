@@ -8,7 +8,7 @@ This is a simple Node.js/Express web application with an SQLite database for man
 - **Cost per unit**
 
 
-The main page allows you to add items and shows the last five entries. A second page at `/report` lets you build damage reports. First choose a category, then select items from that category with quantities. Each saved report shows the total cost of its items.
+The main page allows you to add items and shows the last five entries. A second page at `/report` lets you build damage reports. Choose a category, enter quantities for items and press **Add Items** to build up your report. When finished, click **Save Report** to store it or **Discard Report** to clear the form. Each saved report shows the total cost of its items.
 
 
 ## Development

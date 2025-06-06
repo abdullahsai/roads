@@ -8,7 +8,6 @@ async function loadItems(category) {
     container.innerHTML = '';
     items.forEach(item => {
 
-
         const row = document.createElement('div');
         row.className = 'row g-2 align-items-center mb-2';
         row.innerHTML = `
@@ -61,34 +60,65 @@ async function loadReport() {
     });
 }
 
-async function handleSubmit(e) {
-    e.preventDefault();
 
-    const entries = [];
+const currentItems = [];
+
+function renderCurrentItems() {
+    const tbody = document.querySelector('#currentItemsTable tbody');
+    tbody.innerHTML = '';
+    currentItems.forEach((it, idx) => {
+        const tr = document.createElement('tr');
+        tr.innerHTML = `<td>${it.description}</td><td>${it.quantity}</td>`;
+        tbody.appendChild(tr);
+    });
+}
+
+function addItems() {
     document.querySelectorAll('#itemsList input[type="number"]').forEach(el => {
         const qty = parseFloat(el.value);
         if (qty && qty > 0) {
-            entries.push({ itemId: parseInt(el.dataset.id), quantity: qty });
+            const desc = el.closest('.row').querySelector('label').textContent;
+            currentItems.push({
+                itemId: parseInt(el.dataset.id),
+                description: desc,
+                quantity: qty
+            });
+            el.value = '';
         }
     });
-    if (entries.length === 0) {
-        alert('Enter a quantity for at least one item');
+    renderCurrentItems();
+}
 
+async function handleSubmit(e) {
+    e.preventDefault();
+    if (currentItems.length === 0) {
+        alert('Add items before saving the report');
         return;
     }
+    const payload = currentItems.map(it => ({ itemId: it.itemId, quantity: it.quantity }));
     const res = await fetch('/api/report', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-
-        body: JSON.stringify({ items: entries })
-
+        body: JSON.stringify({ items: payload })
     });
     if (res.ok) {
+        currentItems.length = 0;
+        renderCurrentItems();
         document.getElementById('reportForm').reset();
+        loadItems(document.getElementById('categorySelect').value);
+
         loadReport();
     } else {
         alert('Failed to save report');
     }
+}
+
+
+function discardReport() {
+    currentItems.length = 0;
+    renderCurrentItems();
+    document.getElementById('reportForm').reset();
+    loadItems(document.getElementById('categorySelect').value);
 }
 
 window.addEventListener('DOMContentLoaded', () => {
@@ -100,4 +130,7 @@ window.addEventListener('DOMContentLoaded', () => {
     });
 
     document.getElementById('reportForm').addEventListener('submit', handleSubmit);
+    document.getElementById('addItemsBtn').addEventListener('click', addItems);
+    document.getElementById('discardBtn').addEventListener('click', discardReport);
+
 });
