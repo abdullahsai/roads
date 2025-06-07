@@ -17,4 +17,4 @@ jobs:
         run: npm install -g caprover
 
       - name: Deploy to CapRover
-        run: caprover deploy --caproverUrl ${{ secrets.CAPROVER_SERVER }} --appToken ${{ secrets.CAPROVER_APP_TOKEN }}
+        run: caprover deploy --caproverUrl ${{ secrets.CAPROVER_SERVER }} --appToken ${{ secrets.CAPROVER_APP_TOKEN }} --default
