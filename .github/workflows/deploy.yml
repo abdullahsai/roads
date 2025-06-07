@@ -13,8 +13,18 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v3
 
-      - name: Install CapRover CLI
-        run: npm install -g caprover
+      - name: Create deploy.tar
+        uses: a7ul/tar-action@v1.1.0
+        with:
+          command: c
+          cwd: "./"
+          files: |
+            .
+          outPath: deploy.tar
 
       - name: Deploy to CapRover
-        run: caprover deploy --caproverUrl ${{ secrets.CAPROVER_SERVER }} --appToken ${{ secrets.CAPROVER_APP_TOKEN }} --default
+        uses: caprover/deploy-from-github@main
+        with:
+          server: '${{ secrets.CAPROVER_SERVER }}'
+          app: '${{ secrets.CAPROVER_APP }}'
+          token: '${{ secrets.CAPROVER_APP_TOKEN }}'
