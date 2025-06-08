@@ -1,3 +1,12 @@
+// Helper to convert an ArrayBuffer to a base64 string
+function bufferToBase64(buf) {
+    let binary = '';
+    const bytes = new Uint8Array(buf);
+    for (let i = 0; i < bytes.length; i++) {
+        binary += String.fromCharCode(bytes[i]);
+    }
+    return btoa(binary);
+}
 
 async function loadItems(category) {
     const url = category ? `/api/items/all?category=${encodeURIComponent(category)}` : '/api/items/all';
@@ -151,7 +160,7 @@ async function downloadPdf(id) {
 
     const fontRes = await fetch('/amiri.woff');
     const fontBuf = await fontRes.arrayBuffer();
-    const base64 = btoa(String.fromCharCode(...new Uint8Array(fontBuf)));
+    const base64 = bufferToBase64(fontBuf);
     doc.addFileToVFS('amiri.woff', base64);
     doc.addFont('amiri.woff', 'Amiri', 'normal');
     doc.setFont('Amiri');
