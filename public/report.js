@@ -2,10 +2,12 @@
 async function loadItems(category) {
     const url = category ? `/api/items/all?category=${encodeURIComponent(category)}` : '/api/items/all';
     const res = await fetch(url);
+
     const items = await res.json();
     const container = document.getElementById('itemsList');
     container.innerHTML = '';
     items.forEach(item => {
+
         const row = document.createElement('div');
         row.className = 'row g-2 align-items-center mb-2';
         row.innerHTML = `
@@ -16,6 +18,7 @@ async function loadItems(category) {
                 <input type="number" min="0" step="1" data-id="${item.id}" class="form-control" placeholder="Qty">
             </div>`;
         container.appendChild(row);
+
     });
 }
 
@@ -34,12 +37,15 @@ async function loadCategories() {
     if (categories.length > 0) {
         loadItems(select.value);
     } else {
+
         document.getElementById('itemsList').innerHTML = '<p>لا يوجد</p>';
     }
+
 }
 
 async function loadReport() {
     const res = await fetch('/api/report');
+
     const reports = await res.json();
     const tbody = document.querySelector('#reportTable tbody');
     tbody.innerHTML = '';
@@ -49,7 +55,9 @@ async function loadReport() {
             <td>${rep.id}</td>
             <td>${rep.total.toFixed(2)}</td>
             <td>${new Date(rep.created_at).toLocaleString()}</td>
+
             <td><button class="btn btn-sm btn-outline-primary" data-id="${rep.id}">تنزيل PDF</button></td>
+
         `;
         tbody.appendChild(tr);
     });
@@ -57,6 +65,7 @@ async function loadReport() {
         btn.addEventListener('click', () => downloadPdf(btn.dataset.id));
     });
 }
+
 
 const currentItems = [];
 
@@ -89,10 +98,12 @@ function addItems() {
 async function handleSubmit(e) {
     e.preventDefault();
     if (currentItems.length === 0) {
+
         alert('الرجاء إضافة الأصناف قبل حفظ التقرير');
         return;
     }
     const payload = currentItems.map(it => ({ itemId: it.itemId, quantity: it.quantity }));
+
     const supervisor = document.getElementById('supervisor').value;
     const police_report = document.getElementById('policeNumber').value;
     const street = document.getElementById('street').value;
@@ -109,17 +120,20 @@ async function handleSubmit(e) {
             location,
             items: payload
         })
+
     });
     if (res.ok) {
         currentItems.length = 0;
         renderCurrentItems();
         document.getElementById('reportForm').reset();
         loadItems(document.getElementById('categorySelect').value);
+
         loadReport();
     } else {
         alert('فشل حفظ التقرير');
     }
 }
+
 
 function discardReport() {
     currentItems.length = 0;
@@ -128,11 +142,13 @@ function discardReport() {
     loadItems(document.getElementById('categorySelect').value);
 }
 
+
 async function downloadPdf(id) {
     const res = await fetch(`/api/report/${id}`);
     const data = await res.json();
     const { jsPDF } = window.jspdf;
     const doc = new jsPDF();
+
     const fontRes = await fetch('/amiri.woff');
     const fontBuf = await fontRes.arrayBuffer();
     const base64 = btoa(String.fromCharCode(...new Uint8Array(fontBuf)));
@@ -165,6 +181,7 @@ async function downloadPdf(id) {
         doc.text(it.cost.toFixed(2), 120, y, { align: 'right' });
         doc.text(String(it.quantity), 90, y, { align: 'right' });
         doc.text(it.line_total.toFixed(2), 60, y, { align: 'right' });
+
         y += 6;
         if (y > 270) {
             doc.addPage();
@@ -172,17 +189,22 @@ async function downloadPdf(id) {
         }
     });
     y += 6;
+
     doc.text(`المجموع الكلي: $${data.total.toFixed(2)}`, 200 - 10, y, { align: 'right' });
+
     doc.save(`report-${id}.pdf`);
 }
 
 window.addEventListener('DOMContentLoaded', () => {
+
     loadCategories();
     loadReport();
     document.getElementById('categorySelect').addEventListener('change', (e) => {
         loadItems(e.target.value);
     });
+
     document.getElementById('reportForm').addEventListener('submit', handleSubmit);
     document.getElementById('addItemsBtn').addEventListener('click', addItems);
     document.getElementById('discardBtn').addEventListener('click', discardReport);
+
 });
