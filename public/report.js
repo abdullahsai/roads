@@ -168,6 +168,15 @@ async function downloadPdf(id) {
     doc.addFont('amiri.ttf', 'Amiri', 'normal');
 
     doc.setFont('Amiri');
+    try {
+        const logoRes = await fetch('/logo.png');
+        const logoBuf = await logoRes.arrayBuffer();
+        const logoBase64 = bufferToBase64(logoBuf);
+        doc.addImage('data:image/png;base64,' + logoBase64, 'PNG', 160, 10, 30, 30);
+    } catch (e) {
+        console.warn('logo missing or failed to load');
+    }
+
     doc.setFontSize(16);
     doc.text(`إستمارة تقييم أضرار رقم ${id}`, 200 - 10, 15, { align: 'right' });
     doc.setFontSize(12);
