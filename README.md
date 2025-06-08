@@ -1,6 +1,8 @@
 # Roads Webapp
 
-This is a simple Node.js/Express web application with an SQLite database for managing items. Each item consists of:
+
+This is a simple Node.js/Express web application with an SQLite database for managing items. The interface is now in Arabic and uses a right-to-left layout. Each item consists of:
+
 
 - **Category**
 - **Description**
@@ -9,6 +11,8 @@ This is a simple Node.js/Express web application with an SQLite database for man
 
 
 The main page allows you to add items and shows the last five entries. A second page at `/report` lets you build damage reports. At the top of each report you can enter the supervisor name, police report number, street, state, and a short location description. Choose a category, enter quantities for items and press **Add Items** to build up your report. When finished, click **Save Report** to store it or **Discard Report** to clear the form. Each saved report shows the total cost of its items. Use the **Download PDF** button to export a nicely formatted report with your header information and an itemized table.
+
+The repository includes only a placeholder file at `public/amiri.woff`. To generate PDFs with Arabic text correctly, download the real Amiri font from the [official releases](https://github.com/aliftype/amiri/releases) and replace the placeholder file.
 
 
 ## Development

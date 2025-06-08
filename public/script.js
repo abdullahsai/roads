@@ -34,7 +34,9 @@ async function handleSubmit(e) {
         form.reset();
         fetchItems();
     } else {
-        alert('Failed to add item');
+
+        alert('فشل إضافة العنصر');
+
     }
 }
 

@@ -37,7 +37,8 @@ async function loadCategories() {
     if (categories.length > 0) {
         loadItems(select.value);
     } else {
-        document.getElementById('itemsList').innerHTML = '<p>No items found.</p>';
+
+        document.getElementById('itemsList').innerHTML = '<p>لا يوجد</p>';
     }
 
 }
@@ -55,7 +56,8 @@ async function loadReport() {
             <td>${rep.total.toFixed(2)}</td>
             <td>${new Date(rep.created_at).toLocaleString()}</td>
 
-            <td><button class="btn btn-sm btn-outline-primary" data-id="${rep.id}">Download PDF</button></td>
+            <td><button class="btn btn-sm btn-outline-primary" data-id="${rep.id}">تنزيل PDF</button></td>
+
         `;
         tbody.appendChild(tr);
     });
@@ -96,7 +98,8 @@ function addItems() {
 async function handleSubmit(e) {
     e.preventDefault();
     if (currentItems.length === 0) {
-        alert('Add items before saving the report');
+
+        alert('الرجاء إضافة الأصناف قبل حفظ التقرير');
         return;
     }
     const payload = currentItems.map(it => ({ itemId: it.itemId, quantity: it.quantity }));
@@ -127,7 +130,7 @@ async function handleSubmit(e) {
 
         loadReport();
     } else {
-        alert('Failed to save report');
+        alert('فشل حفظ التقرير');
     }
 }
 
@@ -145,34 +148,40 @@ async function downloadPdf(id) {
     const data = await res.json();
     const { jsPDF } = window.jspdf;
     const doc = new jsPDF();
-    doc.setFontSize(16);
 
-    doc.text(`Damage Report #${id}`, 105, 15, { align: 'center' });
+    const fontRes = await fetch('/amiri.woff');
+    const fontBuf = await fontRes.arrayBuffer();
+    const base64 = btoa(String.fromCharCode(...new Uint8Array(fontBuf)));
+    doc.addFileToVFS('amiri.woff', base64);
+    doc.addFont('amiri.woff', 'Amiri', 'normal');
+    doc.setFont('Amiri');
+    doc.setFontSize(16);
+    doc.text(`إستمارة تقييم أضرار رقم ${id}`, 200 - 10, 15, { align: 'right' });
     doc.setFontSize(12);
     let y = 25;
-    doc.text(`Supervisor: ${data.supervisor || ''}`, 10, y);
+    doc.text(`المشرف / المهندس: ${data.supervisor || ''}`, 200 - 10, y, { align: 'right' });
     y += 6;
-    doc.text(`Police Report #: ${data.police_report || ''}`, 10, y);
+    doc.text(`رقم مرجع الشرطة: ${data.police_report || ''}`, 200 - 10, y, { align: 'right' });
     y += 6;
-    doc.text(`Street: ${data.street || ''}`, 10, y);
+    doc.text(`اسم الطريق: ${data.street || ''}`, 200 - 10, y, { align: 'right' });
     y += 6;
-    doc.text(`State: ${data.state || ''}`, 10, y);
+    doc.text(`الولاية: ${data.state || ''}`, 200 - 10, y, { align: 'right' });
     y += 6;
-    doc.text(`Location: ${data.location || ''}`, 10, y);
+    doc.text(`وصف موقع الحادث: ${data.location || ''}`, 200 - 10, y, { align: 'right' });
     y += 8;
     doc.line(10, y, 200, y);
     y += 6;
-
-    doc.text('Description', 10, y);
-    doc.text('Cost', 80, y);
-    doc.text('Qty', 110, y);
-    doc.text('Total', 140, y);
+    doc.text('الوصف', 190, y, { align: 'right' });
+    doc.text('التكلفة', 120, y, { align: 'right' });
+    doc.text('الكمية', 90, y, { align: 'right' });
+    doc.text('المجموع', 60, y, { align: 'right' });
     y += 6;
     data.items.forEach(it => {
-        doc.text(it.description, 10, y);
-        doc.text(it.cost.toFixed(2), 80, y);
-        doc.text(String(it.quantity), 110, y);
-        doc.text(it.line_total.toFixed(2), 140, y);
+        doc.text(it.description, 190, y, { align: 'right' });
+        doc.text(it.cost.toFixed(2), 120, y, { align: 'right' });
+        doc.text(String(it.quantity), 90, y, { align: 'right' });
+        doc.text(it.line_total.toFixed(2), 60, y, { align: 'right' });
+
         y += 6;
         if (y > 270) {
             doc.addPage();
@@ -180,7 +189,9 @@ async function downloadPdf(id) {
         }
     });
     y += 6;
-    doc.text(`Grand Total: $${data.total.toFixed(2)}`, 10, y);
+
+    doc.text(`المجموع الكلي: $${data.total.toFixed(2)}`, 200 - 10, y, { align: 'right' });
+
     doc.save(`report-${id}.pdf`);
 }
 
