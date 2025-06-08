@@ -10,10 +10,12 @@ app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(express.static(path.join(__dirname, 'public')));
 
+
 // Serve report page
 app.get('/report', (req, res) => {
   res.sendFile(path.join(__dirname, 'public', 'report.html'));
 });
+
 
 // Initialize SQLite database
 const db = new sqlite3.Database('./data.db', (err) => {
@@ -30,6 +32,7 @@ const db = new sqlite3.Database('./data.db', (err) => {
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
       )`
     );
+
     db.run(
       `CREATE TABLE IF NOT EXISTS reports (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -38,7 +41,9 @@ const db = new sqlite3.Database('./data.db', (err) => {
         street TEXT,
         state TEXT,
         location TEXT,
+
         coords TEXT,
+
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
       )`
     );
@@ -52,6 +57,7 @@ const db = new sqlite3.Database('./data.db', (err) => {
         FOREIGN KEY(item_id) REFERENCES items(id)
       )`
     );
+
   }
 });
 
@@ -72,6 +78,7 @@ app.post('/api/items', (req, res) => {
     res.json({ id: this.lastID });
   });
 });
+
 
 // Endpoint to list distinct item categories
 app.get('/api/items/categories', (req, res) => {
@@ -95,6 +102,7 @@ app.get('/api/items/all', (req, res) => {
   }
   query += ' ORDER BY description';
   db.all(query, params, (err, rows) => {
+
     if (err) {
       console.error(err);
       return res.status(500).json({ error: 'Failed to retrieve items' });
@@ -102,6 +110,7 @@ app.get('/api/items/all', (req, res) => {
     res.json(rows);
   });
 });
+
 
 // Endpoint to get last 5 items
 app.get('/api/items', (req, res) => {
@@ -114,6 +123,7 @@ app.get('/api/items', (req, res) => {
   });
 });
 
+
 // Endpoint to add damage report entries
 app.post('/api/report', (req, res) => {
   const {
@@ -122,17 +132,21 @@ app.post('/api/report', (req, res) => {
     street,
     state,
     location,
+
     coords,
     items,
   } = req.body; // [{ itemId, quantity }]
+
   if (!Array.isArray(items) || items.length === 0) {
     return res.status(400).json({ error: 'items must be a non-empty array' });
   }
+
 
   db.run(
     'INSERT INTO reports (supervisor, police_report, street, state, location, coords) VALUES (?, ?, ?, ?, ?, ?)',
     [supervisor, police_report, street, state, location, coords],
     function (err) {
+
     if (err) {
       console.error(err);
       return res.status(500).json({ error: 'Failed to create report' });
@@ -166,6 +180,7 @@ app.get('/api/report', (req, res) => {
                   GROUP BY r.id
                   ORDER BY r.created_at DESC
                   LIMIT 5`;
+
   db.all(query, [], (err, rows) => {
     if (err) {
       console.error(err);
@@ -175,10 +190,12 @@ app.get('/api/report', (req, res) => {
   });
 });
 
+
 // Endpoint to get detailed info for a single report
 app.get('/api/report/:id', (req, res) => {
   const { id } = req.params;
   const infoQuery = `SELECT supervisor, police_report, street, state, location, coords, created_at FROM reports WHERE id = ?`;
+
   const itemsQuery = `SELECT i.description, i.cost, i.unit, ri.quantity,
                              (ri.quantity * i.cost) AS line_total
                         FROM report_items ri
@@ -199,6 +216,7 @@ app.get('/api/report/:id', (req, res) => {
     });
   });
 });
+
 
 app.listen(PORT, () => {
   console.log(`Server listening on port ${PORT}`);
