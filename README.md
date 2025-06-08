@@ -28,7 +28,14 @@ The repository includes placeholder files at `public/amiri.ttf` and `public/logo
    ```bash
    npm start
    ```
-   The app will run on `http://localhost:3000`.
+
+The app will run on `http://localhost:3000`.
+
+On the report page you can capture your current location with GPS. Click
+**الحصول على الموقع** and wait for the indicator to turn green, then press
+**إضافة الإحداثيات** to attach your coordinates (stored as Google Plus Codes)
+to the report.
+
 
 ## Docker
 

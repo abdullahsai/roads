@@ -10,6 +10,43 @@ function bufferToBase64(buf) {
 }
 
 
+let currentCoords = null;
+let watchId = null;
+
+function startGps() {
+    if (!navigator.geolocation) {
+        alert('المتصفح لا يدعم تحديد الموقع');
+        return;
+    }
+    document.getElementById('gpsIndicator').classList.remove('bg-success');
+    document.getElementById('gpsIndicator').classList.add('bg-secondary');
+    document.getElementById('gpsIndicator').textContent = 'جاري تحديد الموقع...';
+    document.getElementById('addCoordsBtn').disabled = true;
+    watchId = navigator.geolocation.watchPosition(pos => {
+        const acc = pos.coords.accuracy;
+        document.getElementById('gpsIndicator').textContent = `الدقة ${acc.toFixed(1)}م`;
+        if (acc <= 5) {
+            currentCoords = { lat: pos.coords.latitude, lng: pos.coords.longitude };
+            document.getElementById('gpsIndicator').classList.remove('bg-secondary');
+            document.getElementById('gpsIndicator').classList.add('bg-success');
+            navigator.geolocation.clearWatch(watchId);
+            document.getElementById('addCoordsBtn').disabled = false;
+        }
+    }, err => {
+        alert('فشل الحصول على الموقع');
+        console.error(err);
+    }, { enableHighAccuracy: true });
+}
+
+function addCoords() {
+    if (!currentCoords) return;
+    const code = OpenLocationCode.encode(currentCoords.lat, currentCoords.lng);
+    document.getElementById('plusCode').value = code;
+    document.getElementById('addCoordsBtn').disabled = true;
+    document.getElementById('gpsIndicator').textContent = `تمت الإضافة: ${code}`;
+}
+
+
 
 async function loadItems(category) {
     const url = category ? `/api/items/all?category=${encodeURIComponent(category)}` : '/api/items/all';
@@ -121,6 +158,9 @@ async function handleSubmit(e) {
     const street = document.getElementById('street').value;
     const state = document.getElementById('state').value;
     const location = document.getElementById('location').value;
+
+    const coords = document.getElementById('plusCode').value;
+
     const res = await fetch('/api/report', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -130,6 +170,8 @@ async function handleSubmit(e) {
             street,
             state,
             location,
+
+            coords,
             items: payload
         })
 
@@ -138,6 +180,11 @@ async function handleSubmit(e) {
         currentItems.length = 0;
         renderCurrentItems();
         document.getElementById('reportForm').reset();
+
+        document.getElementById('plusCode').value = '';
+        document.getElementById('gpsIndicator').classList.remove('bg-success');
+        document.getElementById('gpsIndicator').classList.add('bg-secondary');
+        document.getElementById('gpsIndicator').textContent = 'لم يتم تحديد الموقع';
         loadItems(document.getElementById('categorySelect').value);
 
         loadReport();
@@ -151,6 +198,11 @@ function discardReport() {
     currentItems.length = 0;
     renderCurrentItems();
     document.getElementById('reportForm').reset();
+
+    document.getElementById('plusCode').value = '';
+    document.getElementById('gpsIndicator').classList.remove('bg-success');
+    document.getElementById('gpsIndicator').classList.add('bg-secondary');
+    document.getElementById('gpsIndicator').textContent = 'لم يتم تحديد الموقع';
     loadItems(document.getElementById('categorySelect').value);
 }
 
@@ -193,6 +245,12 @@ async function downloadPdf(id) {
     doc.text(`الولاية: ${data.state || ''}`, 200 - 10, y, { align: 'right' });
     y += 6;
     doc.text(`وصف موقع الحادث: ${data.location || ''}`, 200 - 10, y, { align: 'right' });
+
+    if (data.coords) {
+        y += 6;
+        doc.text(`كود الموقع: ${data.coords}`, 200 - 10, y, { align: 'right' });
+    }
+
     y += 8;
     doc.line(10, y, 200, y);
     y += 6;
@@ -231,5 +289,7 @@ window.addEventListener('DOMContentLoaded', () => {
     document.getElementById('reportForm').addEventListener('submit', handleSubmit);
     document.getElementById('addItemsBtn').addEventListener('click', addItems);
     document.getElementById('discardBtn').addEventListener('click', discardReport);
+    document.getElementById('gpsBtn').addEventListener('click', startGps);
+    document.getElementById('addCoordsBtn').addEventListener('click', addCoords);
 
 });

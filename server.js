@@ -42,6 +42,8 @@ const db = new sqlite3.Database('./data.db', (err) => {
         state TEXT,
         location TEXT,
 
+        coords TEXT,
+
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
       )`
     );
@@ -130,6 +132,8 @@ app.post('/api/report', (req, res) => {
     street,
     state,
     location,
+
+    coords,
     items,
   } = req.body; // [{ itemId, quantity }]
 
@@ -139,8 +143,8 @@ app.post('/api/report', (req, res) => {
 
 
   db.run(
-    'INSERT INTO reports (supervisor, police_report, street, state, location) VALUES (?, ?, ?, ?, ?)',
-    [supervisor, police_report, street, state, location],
+    'INSERT INTO reports (supervisor, police_report, street, state, location, coords) VALUES (?, ?, ?, ?, ?, ?)',
+    [supervisor, police_report, street, state, location, coords],
     function (err) {
 
     if (err) {
@@ -190,7 +194,8 @@ app.get('/api/report', (req, res) => {
 // Endpoint to get detailed info for a single report
 app.get('/api/report/:id', (req, res) => {
   const { id } = req.params;
-  const infoQuery = `SELECT supervisor, police_report, street, state, location, created_at FROM reports WHERE id = ?`;
+  const infoQuery = `SELECT supervisor, police_report, street, state, location, coords, created_at FROM reports WHERE id = ?`;
+
   const itemsQuery = `SELECT i.description, i.cost, i.unit, ri.quantity,
                              (ri.quantity * i.cost) AS line_total
                         FROM report_items ri
