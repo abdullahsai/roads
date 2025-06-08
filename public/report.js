@@ -178,9 +178,12 @@ async function downloadPdf(id) {
     }
 
     doc.setFontSize(16);
-    doc.text(`إستمارة تقييم أضرار رقم ${id}`, 200 - 10, 15, { align: 'right' });
+    doc.text('إستمارة تقييم أضرار', 105, 20, { align: 'center' });
     doc.setFontSize(12);
-    let y = 25;
+    let y = 45;
+    doc.text(`رقم التقرير: ${id}`, 200 - 10, y, { align: 'right' });
+    y += 6;
+
     doc.text(`المشرف / المهندس: ${data.supervisor || ''}`, 200 - 10, y, { align: 'right' });
     y += 6;
     doc.text(`رقم مرجع الشرطة: ${data.police_report || ''}`, 200 - 10, y, { align: 'right' });
