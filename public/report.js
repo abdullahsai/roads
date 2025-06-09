@@ -1,11 +1,14 @@
+
 function bufferToBase64(buf) {
     let binary = "";
+
     const bytes = new Uint8Array(buf);
     for (let i = 0; i < bytes.length; i++) {
         binary += String.fromCharCode(bytes[i]);
     }
     return btoa(binary);
 }
+
 
 let currentCoords = null;
 let watchId = null;
@@ -18,7 +21,6 @@ function startGps() {
     document.getElementById('gpsIndicator').classList.remove('bg-success');
     document.getElementById('gpsIndicator').classList.add('bg-secondary');
     document.getElementById('gpsIndicator').textContent = 'جاري تحديد الموقع...';
-    document.getElementById('coordsDisplay').textContent = '';
     document.getElementById('addCoordsBtn').disabled = true;
     watchId = navigator.geolocation.watchPosition(pos => {
         const acc = pos.coords.accuracy;
@@ -41,18 +43,20 @@ function addCoords() {
     const code = OpenLocationCode.encode(currentCoords.lat, currentCoords.lng);
     document.getElementById('plusCode').value = code;
     document.getElementById('addCoordsBtn').disabled = true;
-    document.getElementById('gpsIndicator').textContent = 'تم تحديد الموقع';
-    document.getElementById('coordsDisplay').textContent = `الكود: ${code}`;
+    document.getElementById('gpsIndicator').textContent = `تمت الإضافة: ${code}`;
 }
+
 
 
 async function loadItems(category) {
     const url = category ? `/api/items/all?category=${encodeURIComponent(category)}` : '/api/items/all';
     const res = await fetch(url);
+
     const items = await res.json();
     const container = document.getElementById('itemsList');
     container.innerHTML = '';
     items.forEach(item => {
+
         const row = document.createElement('div');
         row.className = 'row g-2 align-items-center mb-2';
         row.innerHTML = `
@@ -63,6 +67,7 @@ async function loadItems(category) {
                 <input type="number" min="0" step="1" data-id="${item.id}" class="form-control" placeholder="Qty">
             </div>`;
         container.appendChild(row);
+
     });
 }
 
@@ -81,12 +86,15 @@ async function loadCategories() {
     if (categories.length > 0) {
         loadItems(select.value);
     } else {
+
         document.getElementById('itemsList').innerHTML = '<p>لا يوجد</p>';
     }
+
 }
 
 async function loadReport() {
     const res = await fetch('/api/report');
+
     const reports = await res.json();
     const tbody = document.querySelector('#reportTable tbody');
     tbody.innerHTML = '';
@@ -96,7 +104,9 @@ async function loadReport() {
             <td>${rep.id}</td>
             <td>${rep.total.toFixed(2)}</td>
             <td>${new Date(rep.created_at).toLocaleString()}</td>
+
             <td><button class="btn btn-sm btn-outline-primary" data-id="${rep.id}">تنزيل PDF</button></td>
+
         `;
         tbody.appendChild(tr);
     });
@@ -104,6 +114,7 @@ async function loadReport() {
         btn.addEventListener('click', () => downloadPdf(btn.dataset.id));
     });
 }
+
 
 const currentItems = [];
 
@@ -136,16 +147,20 @@ function addItems() {
 async function handleSubmit(e) {
     e.preventDefault();
     if (currentItems.length === 0) {
+
         alert('الرجاء إضافة الأصناف قبل حفظ التقرير');
         return;
     }
     const payload = currentItems.map(it => ({ itemId: it.itemId, quantity: it.quantity }));
+
     const supervisor = document.getElementById('supervisor').value;
     const police_report = document.getElementById('policeNumber').value;
     const street = document.getElementById('street').value;
     const state = document.getElementById('state').value;
     const location = document.getElementById('location').value;
+
     const coords = document.getElementById('plusCode').value;
+
     const res = await fetch('/api/report', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -155,48 +170,55 @@ async function handleSubmit(e) {
             street,
             state,
             location,
+
             coords,
             items: payload
         })
+
     });
     if (res.ok) {
         currentItems.length = 0;
         renderCurrentItems();
         document.getElementById('reportForm').reset();
+
         document.getElementById('plusCode').value = '';
         document.getElementById('gpsIndicator').classList.remove('bg-success');
         document.getElementById('gpsIndicator').classList.add('bg-secondary');
         document.getElementById('gpsIndicator').textContent = 'لم يتم تحديد الموقع';
-        document.getElementById('coordsDisplay').textContent = '';
         loadItems(document.getElementById('categorySelect').value);
+
         loadReport();
     } else {
         alert('فشل حفظ التقرير');
     }
 }
 
+
 function discardReport() {
     currentItems.length = 0;
     renderCurrentItems();
     document.getElementById('reportForm').reset();
+
     document.getElementById('plusCode').value = '';
     document.getElementById('gpsIndicator').classList.remove('bg-success');
     document.getElementById('gpsIndicator').classList.add('bg-secondary');
     document.getElementById('gpsIndicator').textContent = 'لم يتم تحديد الموقع';
-    document.getElementById('coordsDisplay').textContent = '';
     loadItems(document.getElementById('categorySelect').value);
 }
+
 
 async function downloadPdf(id) {
     const res = await fetch(`/api/report/${id}`);
     const data = await res.json();
     const { jsPDF } = window.jspdf;
     const doc = new jsPDF();
+
     const fontRes = await fetch('/amiri.ttf');
     const fontBuf = await fontRes.arrayBuffer();
     const base64 = bufferToBase64(fontBuf);
     doc.addFileToVFS('amiri.ttf', base64);
     doc.addFont('amiri.ttf', 'Amiri', 'normal');
+
     doc.setFont('Amiri');
     try {
         const logoRes = await fetch('/logo.png');
@@ -206,12 +228,14 @@ async function downloadPdf(id) {
     } catch (e) {
         console.warn('logo missing or failed to load');
     }
+
     doc.setFontSize(16);
     doc.text('إستمارة تقييم أضرار', 105, 20, { align: 'center' });
     doc.setFontSize(12);
     let y = 45;
     doc.text(`رقم التقرير: ${id}`, 200 - 10, y, { align: 'right' });
     y += 6;
+
     doc.text(`المشرف / المهندس: ${data.supervisor || ''}`, 200 - 10, y, { align: 'right' });
     y += 6;
     doc.text(`رقم مرجع الشرطة: ${data.police_report || ''}`, 200 - 10, y, { align: 'right' });
@@ -221,10 +245,12 @@ async function downloadPdf(id) {
     doc.text(`الولاية: ${data.state || ''}`, 200 - 10, y, { align: 'right' });
     y += 6;
     doc.text(`وصف موقع الحادث: ${data.location || ''}`, 200 - 10, y, { align: 'right' });
+
     if (data.coords) {
         y += 6;
-        doc.text(`الإحداثيات: ${data.coords}`, 200 - 10, y, { align: 'right' });
+        doc.text(`كود الموقع: ${data.coords}`, 200 - 10, y, { align: 'right' });
     }
+
     y += 8;
     doc.line(10, y, 200, y);
     y += 6;
@@ -238,6 +264,7 @@ async function downloadPdf(id) {
         doc.text(it.cost.toFixed(2), 120, y, { align: 'right' });
         doc.text(String(it.quantity), 90, y, { align: 'right' });
         doc.text(it.line_total.toFixed(2), 60, y, { align: 'right' });
+
         y += 6;
         if (y > 270) {
             doc.addPage();
@@ -245,19 +272,24 @@ async function downloadPdf(id) {
         }
     });
     y += 6;
+
     doc.text(`المجموع الكلي: $${data.total.toFixed(2)}`, 200 - 10, y, { align: 'right' });
+
     doc.save(`report-${id}.pdf`);
 }
 
 window.addEventListener('DOMContentLoaded', () => {
+
     loadCategories();
     loadReport();
     document.getElementById('categorySelect').addEventListener('change', (e) => {
         loadItems(e.target.value);
     });
+
     document.getElementById('reportForm').addEventListener('submit', handleSubmit);
     document.getElementById('addItemsBtn').addEventListener('click', addItems);
     document.getElementById('discardBtn').addEventListener('click', discardReport);
     document.getElementById('gpsBtn').addEventListener('click', startGps);
     document.getElementById('addCoordsBtn').addEventListener('click', addCoords);
+
 });
