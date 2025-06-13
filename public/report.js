@@ -201,7 +201,9 @@ function discardReport() {
 
     document.getElementById('plusCode').value = '';
     document.getElementById('gpsIndicator').classList.remove('bg-success');
-    document.getElementById('gpsIndicator').classList.add('bg-secondary');
+    doc.setLineWidth(0.8);
+    doc.setLineWidth(0.2);
+    y += 8;
     document.getElementById('gpsIndicator').textContent = 'لم يتم تحديد الموقع';
     loadItems(document.getElementById('categorySelect').value);
 }
